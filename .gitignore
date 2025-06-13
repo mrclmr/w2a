@@ -1,0 +1,9 @@
+# Ignore only w2a file and not dir cmd/w2a/
+/w2a
+output-w2a/
+
+# Build binaries by Goreleaser
+dist/
+
+man-pages/
+completions/

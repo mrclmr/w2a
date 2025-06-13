@@ -1,0 +1,89 @@
+version: 2
+
+before:
+  hooks:
+    # Generate manpage and completions
+    - just man-pages completions
+
+builds:
+  -
+    env:
+    - CGO_ENABLED=0
+    goos:
+    - linux
+    - darwin
+    - windows
+    goarch:
+    - '386'
+    - amd64
+    - arm
+    - arm64
+    goarm:
+    - '6'
+    - '7'
+    ignore:
+    - goos: darwin
+      goarch: '386'
+    - goos: darwin
+      goarch: arm
+
+checksum:
+  name_template: '{{ .ProjectName }}_checksums.txt'
+
+archives:
+  -
+    name_template: >-
+      {{- .ProjectName }}_
+      {{- if eq .Os "darwin" }}Darwin
+      {{- else if eq .Os "linux" }}Linux
+      {{- else if eq .Os "windows" }}Windows
+      {{- else }}{{ .Os }}{{ end }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end -}}
+    format_overrides:
+    - goos: windows
+      formats:
+        - zip
+    files:
+    - LICENSE
+    - README.md
+    - docs/*
+    - man-pages/*
+    - completions/*
+
+# Goreleaser example:
+# https://github.com/goreleaser/goreleaser/tree/main/.goreleaser.yaml
+# https://github.com/goreleaser/goreleaser/tree/main/scripts
+# https://github.com/goreleaser/goreleaser/blob/main/cmd/man.go
+homebrew_casks:
+  - repository:
+      owner: mrclmr
+      name: homebrew-tap
+    directory: Casks
+    description: "Convert a workout yaml file to audio files."
+    homepage: "https://github.com/mrclmr/w2a"
+    dependencies:
+      - formula: sox
+    manpages:
+      - 'man-pages/w2a.1'
+      - 'man-pages/w2a-example.1'
+    completions:
+      bash: 'completions/w2a.bash'
+      zsh: 'completions/w2a.zsh'
+      fish: 'completions/w2a.fish'
+    hooks:
+      post:
+        install: |
+          system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/w2a"]
+
+scoops:
+  -
+    repository:
+      owner: mrclmr
+      name: scoop-bucket
+    depends: ["sox", "espeak-ng", "ffmpeg"]
+    homepage: "https://github.com/mrclmr/w2a"
+    description: "Convert a workout yaml file to audio files."
+    license: MIT

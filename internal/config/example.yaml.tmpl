@@ -1,0 +1,155 @@
+# Set only one of these: [[ if isDarwin ]]say_voice, [[ end ]]espeak_ng_voice or custom_command.
+tts:
+[[- if isDarwin ]]
+  # If this key is set, set no other key.
+  # Use say for TTS.
+  # See more voices
+  #
+  #   say -v ?
+  #
+  say_voice: 'Daniel'
+  #
+  #
+[[- end ]]
+  # If this key is set, set no other key.
+  # Use espeak-ng for TTS.
+  # See more voices
+  #
+  #   espeak-ng --voices
+  #
+  [[ if isDarwin ]]# [[ end ]]espeak_ng_voice: 'en-gb'
+  #
+  #
+  # If this key is set, set no other key.
+  # Use a custom command.
+  # The output wav file needs to have:
+  #   * one channel
+  #   * 22050 bitrate
+  # Needed format arguments in command:
+  #
+  #   %[1]s : path to wav file
+  #   %[2]s : text
+  #
+  # custom_command: 'custom-tts --output-file %[1]s %[2]s'
+#
+#
+# Required
+# Formats:
+#
+#   mp3 - ffmpeg called
+[[- if isDarwin ]]
+#   m4a - afconvert called
+[[- end ]]
+#   wav - nothing called
+#
+audio_format: [[ if isDarwin ]]'m4a'[[ else ]]'mp3'[[ end ]]
+#
+#
+# Required
+i18n:
+  and: 'and'
+  minute:
+    singular: 'minute'
+    plural: 'minutes'
+  second:
+    singular: 'second'
+    plural: 'seconds'
+#
+#
+# Optional
+# Template values
+#
+#   {{ .WorkoutExercisesCount }}        : workout exercises count
+#   {{ .WorkoutDuration }}              : duration of workout
+#   {{ .WorkoutDurationWithoutPauses }} : duration of workout without pauses
+#
+before_workout_announce: '{{ .WorkoutExercisesCount }} exercises will take a total of {{ .WorkoutDuration }}. The pure training time is {{ .WorkoutDurationWithoutPauses }}.'
+#
+#
+# Optional
+# Template values
+#
+#   {{ .WorkoutExercisesCount }}        : workout exercises count
+#   {{ .WorkoutDuration }}              : duration of workout
+#   {{ .WorkoutDurationWithoutPauses }} : duration of workout without pauses
+#
+after_workout_announce: 'You trained for {{ .WorkoutDuration }}! You have done well.'
+#
+#
+# Required
+pause:
+  # Template values
+  #
+  #   {{ .ExerciseDuration }} : exercise duration
+  #   {{ .ExerciseName }}     : exercise name
+  #
+  text: 'Prepare for {{ .ExerciseName }} for {{ .ExerciseDuration }}'
+  duration: '10s'
+#
+#
+# Required
+half_time:
+  text: 'Change side'
+  # Pauses the exercise for announcement.
+  duration: '4s'
+#
+#
+# Required
+# This will be shortly announced after the start sound.
+exercise_beginning: '{{ .ExerciseName }} for {{ .ExerciseDuration }}'
+#
+#
+# Optional (Required if referenced in exercises)
+# Define same exercises and reference them once.
+# Key name is freely selectable. This is a yaml feature.
+squats_ex: &squats
+  name: Squats
+  duration: '30s'
+#
+#
+# Required
+exercises:
+  - name: 'Warm Up'
+    duration: '2m'
+    texts:
+      - 'Neck Roll from Side to Side'
+      - 'Shoulder Roll'
+      - 'Wide Stance Toe Reach'
+  - name: 'Jumping Jacks'
+    duration: '30s'
+  - name: 'Steam Engine'
+    duration: '30s'
+  - name: 'Push-Ups'
+    duration: '30s'
+  - name: 'Crunches'
+    duration: '30s'
+  - name: 'Hip Raises'
+    duration: '30s'
+  # First time squats
+  - <<: *squats
+  - name: 'Triceps Lifts'
+    duration: '30s'
+  - name: 'Plank'
+    duration: '30s'
+  - name: 'High Knees Running in Place'
+    duration: '30s'
+  - name: 'Lunges'
+    duration: '30s'
+  - name: 'Push-Ups With Rotation'
+    duration: '30s'
+  - name: 'Side Plank'
+    duration: '30s'
+    half_time: true
+  # Second time squats
+  - <<: *squats
+#
+#
+# Optional
+# Log levels:
+#
+#   debug
+#   info (default, no timestamp or additional context printed)
+#   warn
+#   error
+#
+# log_level: 'info'

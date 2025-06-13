@@ -1,0 +1,40 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: extractions/setup-just@v3
+
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Audit dependencies
+        run: just audit
+
+      - name: Go mod tidy
+        run: go mod tidy -diff
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          # Require: The version of golangci-lint to use.
+          version: latest
+
+      - name: Test and build
+        run: just test build
