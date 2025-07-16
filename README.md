@@ -2,13 +2,13 @@
 
 # w2a (workout to audio)
 
-w2a converts a workout yaml file to audio files.
+w2a converts a workout YAML file with text-to-speech (TTS) into audio files, enabling a seamless and guided exercise experience.
 
 ![overview.png](docs/overview.png)
 
-## Installation
+I made this program because simple audio files make it easier for me to follow the specific exercises I need and want to do each day. I also wanted to capture the helpful tips physicians give me — things they often say just once, but I forget soon after.
 
-See [installation](docs/installation.md).
+## [Installation](docs/installation.md)
 
 ## Example
 
