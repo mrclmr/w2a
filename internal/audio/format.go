@@ -25,6 +25,7 @@ func (a *Format) UnmarshalYAML(node *yaml.Node) error {
 	}
 	for i := M4a; i < Unknown; i++ {
 		if strings.EqualFold(i.String(), y) {
+			*a = i
 			return nil
 		}
 	}
