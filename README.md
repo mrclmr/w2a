@@ -4,7 +4,7 @@
 
 w2a converts a workout yaml file to audio files.
 
-![w2a-showcase.png](docs/w2a-showcase.png)
+![overview.png](docs/overview.png)
 
 ## Installation
 
