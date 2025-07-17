@@ -247,7 +247,7 @@ func removeOtherFiles(dir string, excludedFiles map[string]bool) error {
 			if err != nil {
 				return err
 			}
-			slog.Info("removed", "path", normPath)
+			slog.Info("removed\t", "path", normPath)
 		}
 	}
 	return nil
