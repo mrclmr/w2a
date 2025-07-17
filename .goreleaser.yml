@@ -68,7 +68,6 @@ homebrew_casks:
       - formula: sox
     manpages:
       - 'man-pages/w2a.1'
-      - 'man-pages/w2a-example.1'
     completions:
       bash: 'completions/w2a.bash'
       zsh: 'completions/w2a.zsh'

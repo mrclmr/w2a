@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strings"
 
 	"github.com/mrclmr/w2a/internal/config"
 	"github.com/mrclmr/w2a/internal/log"
@@ -35,9 +34,20 @@ func newRootCmd(
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
 		},
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: autocomplete,
+		Args:              cobra.RangeArgs(0, 1),
+		ValidArgsFunction: autoComplete,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Flags().Changed("example") {
+				example, err := config.Example()
+				if err != nil {
+					return err
+				}
+				_, err = fmt.Fprintln(os.Stdout, example)
+				return err
+			}
+			if len(args) != 1 {
+				return errors.New("argument missing: path to yaml file")
+			}
 			path := args[0]
 			if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 				return fmt.Errorf("configuration not found: %w", err)
@@ -71,22 +81,7 @@ Sound Credits
 * success.wav (success-a1a69bc.wav) by maxmakessounds -- https://freesound.org/s/353546/ -- License: Attribution 4.0
 `)
 
-	exampleCmd := &cobra.Command{
-		Use:               "example",
-		Short:             "Print example workout yaml",
-		Args:              cobra.NoArgs,
-		ValidArgsFunction: cobra.NoFileCompletions,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			example, err := config.Example()
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(os.Stdout, example)
-			return err
-		},
-	}
-
-	rootCmd.AddCommand(exampleCmd)
+	rootCmd.Flags().BoolP("example", "e", false, "Print example workout yaml")
 
 	rootCmd.AddCommand(newManCmd(rootCmd))
 
@@ -100,13 +95,9 @@ func checkErr(err error) {
 	}
 }
 
-func autocomplete(_ *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	if len(toComplete) > 0 && strings.HasPrefix("example", toComplete) {
-		return []string{"example"}, cobra.ShellCompDirectiveNoFileComp
-	}
-	if len(args) != 0 {
+func autoComplete(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
+	if len(args) > 0 {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
-
 	return []string{"yml", "yaml"}, cobra.ShellCompDirectiveFilterFileExt
 }

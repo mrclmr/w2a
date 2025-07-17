@@ -14,7 +14,7 @@ I made this program because simple audio files make it easier for me to follow t
 
 1. Create the documented `example.yaml` file
    ```
-   w2a example > example.yaml
+   w2a --example > example.yaml
    ```
   
 2. Create sound files in `output-w2a/`
