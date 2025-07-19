@@ -1,6 +1,7 @@
 package audio
 
 //go:generate go run golang.org/x/tools/cmd/stringer@latest -type TTSCmd
+
 type TTSCmd int
 
 const (

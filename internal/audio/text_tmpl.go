@@ -67,10 +67,3 @@ func (t *TextTmpl) UnmarshalYAML(node *yaml.Node) error {
 func (t *TextTmpl) String() string {
 	return t.str
 }
-
-func Must(t *TextTmpl, err error) *TextTmpl {
-	if err != nil {
-		panic(err)
-	}
-	return t
-}
