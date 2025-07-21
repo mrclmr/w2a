@@ -155,6 +155,18 @@ func run(ctx context.Context, cfg *config.Workout) error {
 		WorkoutDurationWithoutPauses: workoutDurWithoutPauses,
 	}
 
+	if cfg.BeforeWorkoutText != nil {
+		err := creator.TextToAudioFile(ctx,
+			[]audio.Segment{
+				&audio.Text{Value: cfg.BeforeWorkoutText.Replace(tmplValues)},
+			},
+			"00-Before_Workout",
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	exerciseStartSoundDur := 2 * time.Second
 	exerciseNameDur := 4 * time.Second
 
@@ -233,18 +245,6 @@ func run(ctx context.Context, cfg *config.Workout) error {
 				countdown,
 			),
 			fmt.Sprintf("%02d-1-%s", i+1, sanitizeFilename(e.Name)),
-		)
-		if err != nil {
-			return err
-		}
-	}
-
-	if cfg.BeforeWorkoutText != nil {
-		err := creator.TextToAudioFile(ctx,
-			[]audio.Segment{
-				&audio.Text{Value: cfg.BeforeWorkoutText.Replace(tmplValues)},
-			},
-			"00-Before_Workout",
 		)
 		if err != nil {
 			return err
