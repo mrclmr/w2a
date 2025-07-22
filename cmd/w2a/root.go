@@ -167,7 +167,7 @@ func run(ctx context.Context, cfg *config.Workout) error {
 		}
 	}
 
-	exerciseStartSoundDur := 2 * time.Second
+	exerciseStartSoundDur := 1 * time.Second
 	exerciseNameDur := 4 * time.Second
 
 	start := 5
@@ -179,7 +179,7 @@ func run(ctx context.Context, cfg *config.Workout) error {
 		)
 	}
 
-	pauseDurRemainder := cfg.Pause.Duration - (2*time.Second + countdownDur)
+	pauseDurRemainder := cfg.Pause.Duration - (exerciseStartSoundDur + countdownDur)
 
 	for i, e := range cfg.Exercises {
 		// Pause
@@ -189,7 +189,7 @@ func run(ctx context.Context, cfg *config.Workout) error {
 		err := creator.TextToAudioFile(ctx,
 			slices.Concat(
 				[]audio.Segment{
-					&audio.Sound{Filename: "start-2929965.wav", Length: 2 * time.Second},
+					&audio.Sound{Filename: "start-2929965.wav", Length: exerciseStartSoundDur},
 					&audio.Text{Value: cfg.Pause.Text.Replace(tmplValues), Length: pauseDurRemainder},
 				},
 				countdown,
@@ -226,8 +226,8 @@ func run(ctx context.Context, cfg *config.Workout) error {
 					Value:  cfg.HalfTime.Text.Replace(tmplValues),
 					Length: cfg.HalfTime.Duration,
 				},
-				&audio.Sound{Filename: "start-2929965.wav", Length: 1 * time.Second},
-				&audio.Silence{Length: e.Duration/2 - (1*time.Second + countdownDur)},
+				&audio.Sound{Filename: "start-2929965.wav", Length: exerciseStartSoundDur},
+				&audio.Silence{Length: e.Duration/2 - (exerciseStartSoundDur + countdownDur)},
 			}
 		} else {
 			textsOptHalfTime = []audio.Segment{
