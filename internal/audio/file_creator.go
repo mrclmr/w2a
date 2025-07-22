@@ -106,6 +106,8 @@ type File struct {
 }
 
 func (f *FileCreator) BatchCreate(ctx context.Context, files []File) error {
+	// TODO: Create directed acyclic graph for parallel job execution.
+
 	for _, file := range files {
 		filename, op, err := f.textToAudioFile(ctx, file.Segments, file.Name)
 		if err != nil {
