@@ -100,17 +100,23 @@ func (f *FileCreator) RemoveOtherFiles() error {
 	return removeOtherFiles(f.outputDir, f.outputFilesToKeep)
 }
 
-func (f *FileCreator) TextToAudioFile(ctx context.Context, segments []Segment, name string) error {
-	file, op, err := f.textToAudioFile(ctx, segments, name)
-	if err != nil {
-		return err
+type File struct {
+	Name     string
+	Segments []Segment
+}
+
+func (f *FileCreator) BatchCreate(ctx context.Context, files []File) error {
+	for _, file := range files {
+		filename, op, err := f.textToAudioFile(ctx, file.Segments, file.Name)
+		if err != nil {
+			return err
+		}
+		path := filepath.Join(f.outputDir, filename)
+
+		f.outputFilesToKeep[path] = true
+
+		slog.Info(op.String()+"\t", "path", path)
 	}
-	path := filepath.Join(f.outputDir, file)
-
-	f.outputFilesToKeep[path] = true
-
-	slog.Info(op.String()+"\t", "path", path)
-
 	return nil
 }
 

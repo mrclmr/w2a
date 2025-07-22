@@ -155,16 +155,15 @@ func run(ctx context.Context, cfg *config.Workout) error {
 		WorkoutDurationWithoutPauses: workoutDurWithoutPauses,
 	}
 
+	var audioFiles []audio.File
+
 	if cfg.BeforeWorkoutText != nil {
-		err := creator.TextToAudioFile(ctx,
-			[]audio.Segment{
+		audioFiles = append(audioFiles, audio.File{
+			Name: "00-Before_Workout",
+			Segments: []audio.Segment{
 				&audio.Text{Value: cfg.BeforeWorkoutText.Replace(tmplValues)},
 			},
-			"00-Before_Workout",
-		)
-		if err != nil {
-			return err
-		}
+		})
 	}
 
 	exerciseStartSoundDur := 1 * time.Second
@@ -186,19 +185,16 @@ func run(ctx context.Context, cfg *config.Workout) error {
 		tmplValues.ExerciseDuration = i18n.DurToText(e.Duration)
 		tmplValues.ExerciseName = e.Name
 
-		err := creator.TextToAudioFile(ctx,
-			slices.Concat(
+		audioFiles = append(audioFiles, audio.File{
+			Name: fmt.Sprintf("%02d-0-Pause", i+1),
+			Segments: slices.Concat(
 				[]audio.Segment{
 					&audio.Sound{Filename: "start-2929965.wav", Length: exerciseStartSoundDur},
 					&audio.Text{Value: cfg.Pause.Text.Replace(tmplValues), Length: pauseDurRemainder},
 				},
 				countdown,
 			),
-			fmt.Sprintf("%02d-0-Pause", i+1),
-		)
-		if err != nil {
-			return err
-		}
+		})
 
 		// Exercise
 
@@ -238,30 +234,29 @@ func run(ctx context.Context, cfg *config.Workout) error {
 			}
 		}
 
-		err = creator.TextToAudioFile(ctx,
-			slices.Concat(
+		audioFiles = append(audioFiles, audio.File{
+			Name: fmt.Sprintf("%02d-1-%s", i+1, sanitizeFilename(e.Name)),
+			Segments: slices.Concat(
 				startAndName,
 				textsOptHalfTime,
 				countdown,
 			),
-			fmt.Sprintf("%02d-1-%s", i+1, sanitizeFilename(e.Name)),
-		)
-		if err != nil {
-			return err
-		}
+		})
 	}
 
 	if cfg.AfterWorkoutText != nil {
-		err := creator.TextToAudioFile(ctx,
-			[]audio.Segment{
+		audioFiles = append(audioFiles, audio.File{
+			Name: fmt.Sprintf("%02d-After_Workout", len(cfg.Exercises)+1),
+			Segments: []audio.Segment{
 				&audio.Sound{Filename: "success-a1a69bc.wav"},
 				&audio.Text{Value: cfg.AfterWorkoutText.Replace(tmplValues)},
 			},
-			fmt.Sprintf("%02d-After_Workout", len(cfg.Exercises)+1),
-		)
-		if err != nil {
-			return err
-		}
+		})
+	}
+
+	err = creator.BatchCreate(ctx, audioFiles)
+	if err != nil {
+		return err
 	}
 
 	return creator.RemoveOtherFiles()
