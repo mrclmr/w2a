@@ -20,6 +20,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mrclmr/w2a/internal/m3u"
+
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -38,17 +40,26 @@ func ToExecCmdCtx[c Cmd](fn func(context.Context, string, ...string) c) ExecCmdC
 	}
 }
 
+type CreatePlaylistFunc = func(string) (io.WriteCloser, error)
+
+func ToCreatePlaylistFunc[wc io.WriteCloser](fn func(string) (wc, error)) CreatePlaylistFunc {
+	return func(name string) (io.WriteCloser, error) {
+		return fn(name)
+	}
+}
+
 type TTS struct {
 	TTSCmd TTSCmd
 	Voice  string
 }
 
 type FileCreator struct {
-	execCmdCtx  ExecCmdCtx
-	tts         *TTS
-	audioFormat Format
-	tempDir     string
-	outputDir   string
+	execCmdCtx         ExecCmdCtx
+	tts                *TTS
+	audioFormat        Format
+	tempDir            string
+	outputDir          string
+	createPlaylistFunc CreatePlaylistFunc
 
 	existingFiles     map[string][]string
 	outputFilesToKeep map[string]bool
@@ -60,6 +71,7 @@ func NewFileCreator(
 	audioFormat Format,
 	tempDir string,
 	outputDir string,
+	createPaylistFunc CreatePlaylistFunc,
 ) (*FileCreator, error) {
 	if err := mkdirAllIfNotExists(outputDir); err != nil {
 		return nil, err
@@ -85,11 +97,12 @@ func NewFileCreator(
 	maps.Copy(existingFilesMap, existingTempFilesMap)
 
 	return &FileCreator{
-		execCmdCtx:  execCmd,
-		tts:         tts,
-		audioFormat: audioFormat,
-		tempDir:     tempDir,
-		outputDir:   outputDir,
+		execCmdCtx:         execCmd,
+		tts:                tts,
+		audioFormat:        audioFormat,
+		tempDir:            tempDir,
+		outputDir:          outputDir,
+		createPlaylistFunc: createPaylistFunc,
 
 		existingFiles:     existingFilesMap,
 		outputFilesToKeep: make(map[string]bool),
@@ -108,17 +121,38 @@ type File struct {
 func (f *FileCreator) BatchCreate(ctx context.Context, files []File) error {
 	// TODO: Create directed acyclic graph for parallel job execution.
 
+	playlistPath := filepath.Join(f.outputDir, "playlist.m3u")
+	f.outputFilesToKeep[playlistPath] = true
+	playlistFile, err := f.createPlaylistFunc(playlistPath)
+	if err != nil {
+		return err
+	}
+	playlist := m3u.NewPlaylist(playlistFile)
+
 	for _, file := range files {
 		filename, op, err := f.textToAudioFile(ctx, file.Segments, file.Name)
 		if err != nil {
 			return err
 		}
+
 		path := filepath.Join(f.outputDir, filename)
+		abs, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+		// TODO: Add correct duration.
+		playlist.Add(abs, 1*time.Second)
 
 		f.outputFilesToKeep[path] = true
 
 		slog.Info(op.String()+"\t", "path", path)
 	}
+
+	err = playlist.Write()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

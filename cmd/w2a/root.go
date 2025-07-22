@@ -140,6 +140,7 @@ func run(ctx context.Context, cfg *config.Workout) error {
 		cfg.AudioFormat,
 		filepath.Join(tempDir(), intermediateFilesDir),
 		outputDir,
+		audio.ToCreatePlaylistFunc(os.Create),
 	)
 	if err != nil {
 		return err
