@@ -13,7 +13,6 @@ import (
 	"log/slog"
 	"maps"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -567,7 +566,7 @@ func (f *FileCreator) custom(ctx context.Context, text string) (string, fileOper
 	}
 
 	slog.Debug("execute", "cmd", text)
-	out, err := exec.CommandContext(
+	out, err := f.execCmdCtx(
 		ctx,
 		fmt.Sprintf(cmd, path, text),
 	).CombinedOutput()
