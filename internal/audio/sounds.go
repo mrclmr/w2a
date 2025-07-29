@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-// Allow standalone executable (go build) by embedding and calling initSounds().
+// Allow standalone executable (go buildCmd) by embedding and calling initSounds().
 //
 // Use one channel:        sox old.wav -c 1 new.wav
 // Use 22050 sample rate:  sox old.wav -r 22050 new.wav

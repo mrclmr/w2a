@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -21,12 +22,12 @@ type dummyCmd struct {
 }
 
 func (c dummyCmd) CombinedOutput() ([]byte, error) {
-	return []byte{}, nil
+	return nil, nil
 }
 
 const (
-	outputDir = "file_creator_audio-dir"
-	tempDir   = "file_creator_temp-dir"
+	outputDir = "output-dir"
+	tempDir   = "temp-dir"
 )
 
 type dummyPlaylist struct {
@@ -38,6 +39,7 @@ func (d *dummyPlaylist) Close() error {
 }
 
 func TestFileCreator_BatchCreate(t *testing.T) {
+	dir := t.TempDir()
 	tests := []struct {
 		name         string
 		files        []File
@@ -53,12 +55,10 @@ func TestFileCreator_BatchCreate(t *testing.T) {
 				},
 			},
 			wantPlaylist: `#EXTM3U
-#EXTINF:1,my-file-03bdd2e.mp3
-file:///Users/meyermarcel/projects/w2a/internal/audio/file_creator_audio-dir/my-file-03bdd2e.mp3
-`,
-			wantLog: `sox -n -r 22050 file_creator_temp-dir/silence_1s-92ed2b7.wav trim 0.0 1.00
-ffmpeg -i file_creator_temp-dir/silence_1s-92ed2b7.wav -ab 256k -ar 44100 -ac 2 file_creator_audio-dir/my-file-03bdd2e.mp3
-`,
+#EXTINF:1,my-file-deed831.mp3
+file://` + filepath.Join(dir, "output-dir", "my-file-deed831.mp3") + "\n",
+			wantLog: `sox -n -r 22050 ` + filepath.Join(dir, "temp-dir", "silence_1s-393bed8.wav") + ` trim 0.0 1.00
+ffmpeg -i ` + filepath.Join(dir, "temp-dir", "silence_1s-393bed8.wav") + ` -ab 256k -ar 44100 -ac 2 ` + filepath.Join(dir, "output-dir", "my-file-deed831.mp3") + "\n",
 		},
 	}
 	for _, tt := range tests {
@@ -72,8 +72,8 @@ ffmpeg -i file_creator_temp-dir/silence_1s-92ed2b7.wav -ab 256k -ar 44100 -ac 2 
 					Voice:  "en-GB",
 				},
 				Mp3,
-				tempDir,
-				outputDir,
+				filepath.Join(dir, tempDir),
+				filepath.Join(dir, outputDir),
 				func(name string) (io.WriteCloser, error) {
 					return bufPlaylist, nil
 				},
