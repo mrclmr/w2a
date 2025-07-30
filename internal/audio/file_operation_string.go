@@ -11,13 +11,13 @@ func _() {
 	_ = x[opErr-0]
 	_ = x[noop-1]
 	_ = x[created-2]
-	_ = x[skipped-3]
+	_ = x[exists-3]
 	_ = x[copied-4]
 }
 
-const _fileOperation_name = "opErrnoopcreatedskippedcopied"
+const _fileOperation_name = "opErrnoopcreatedexistscopied"
 
-var _fileOperation_index = [...]uint8{0, 5, 9, 16, 23, 29}
+var _fileOperation_index = [...]uint8{0, 5, 9, 16, 22, 28}
 
 func (i fileOperation) String() string {
 	if i < 0 || i >= fileOperation(len(_fileOperation_index)-1) {

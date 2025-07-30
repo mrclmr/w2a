@@ -10,7 +10,7 @@ const (
 	// File was created or needs to be created.
 	created
 
-	// File already exists and was skipped or copied.
-	skipped
+	// File already exists or was copied.
+	exists
 	copied
 )

@@ -17,7 +17,7 @@ type fileCacheBuilder struct {
 	existingFiles map[string]map[string]bool
 }
 
-func (f *fileCacheBuilder) buildCmd(
+func (f *fileCacheBuilder) cmd(
 	cmd *cmd,
 ) *fileCache {
 	return &fileCache{
@@ -26,7 +26,7 @@ func (f *fileCacheBuilder) buildCmd(
 	}
 }
 
-func (f *fileCacheBuilder) buildConvertCmd(
+func (f *fileCacheBuilder) convert(
 	execCmdCtx ExecCmdCtx,
 	cmdStr string,
 	args []string,
@@ -39,7 +39,7 @@ func (f *fileCacheBuilder) buildConvertCmd(
 	return op, n, nil
 }
 
-func (f *fileCacheBuilder) buildNoop(
+func (f *fileCacheBuilder) noop(
 	outFile string,
 ) *fileCache {
 	return &fileCache{
@@ -50,19 +50,19 @@ func (f *fileCacheBuilder) buildNoop(
 	}
 }
 
-func (f *fileCacheBuilder) buildCopyWav(
-	srcWavPath string,
-	name string,
-) (fileOperation, *copyWav, error) {
-	cpWav := copyWav{
-		srcWavPath: srcWavPath,
-		dstWavPath: name + ".wav",
+func (f *fileCacheBuilder) copy(
+	srcPath string,
+	dstPath string,
+) (fileOperation, *copyNode, error) {
+	cpNode := &copyNode{
+		srcPath: srcPath,
+		dstPath: dstPath,
 	}
-	op, err := useExistingFile(f.existingFiles, &cpWav)
+	op, err := useExistingFile(f.existingFiles, cpNode)
 	if err != nil {
 		return 0, nil, err
 	}
-	return op, &cpWav, nil
+	return op, cpNode, nil
 }
 
 func newFileCacheBuilder(
@@ -95,7 +95,7 @@ func (f *fileCache) Run(ctx context.Context, _ []fileOperation) (fileOperation, 
 	if err != nil {
 		return 0, err
 	}
-	if op >= skipped {
+	if op >= exists {
 		return op, nil
 	}
 	return f.node.Run(ctx, nil)
@@ -105,7 +105,7 @@ func useExistingFile(existingFiles map[string]map[string]bool, n node) (fileOper
 	for _, paths := range existingFiles {
 		for p := range paths {
 			if norm.NFC.String(filepath.Base(p)) == n.outputFile() {
-				return skipped, nil
+				return exists, nil
 			}
 		}
 	}

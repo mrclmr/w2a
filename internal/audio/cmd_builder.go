@@ -41,7 +41,7 @@ func newCmdBuilder(
 func (cb *cmdBuilder) ttsCmd(text string) *fileCache {
 	switch cb.tts.TTSCmd {
 	case Say:
-		return cb.fileCacheBuilder.buildCmd(
+		return cb.fileCacheBuilder.cmd(
 			newCmd(
 				cb.execCmdCtx,
 				"say",
@@ -57,7 +57,7 @@ func (cb *cmdBuilder) ttsCmd(text string) *fileCache {
 			),
 		)
 	case EspeakNG:
-		return cb.fileCacheBuilder.buildCmd(
+		return cb.fileCacheBuilder.cmd(
 			newCmd(
 				cb.execCmdCtx,
 				"espeak-ng",
@@ -85,7 +85,7 @@ func (cb *cmdBuilder) soxConcat(filenames []string) *fileCache {
 	for i := range filenames {
 		filenames[i] = filepath.Join(cb.tempDir, filenames[i])
 	}
-	return cb.fileCacheBuilder.buildCmd(
+	return cb.fileCacheBuilder.cmd(
 		newCmd(
 			cb.execCmdCtx,
 			"sox",
@@ -95,7 +95,7 @@ func (cb *cmdBuilder) soxConcat(filenames []string) *fileCache {
 }
 
 func (cb *cmdBuilder) soxSilence(duration time.Duration) *fileCache {
-	return cb.fileCacheBuilder.buildCmd(
+	return cb.fileCacheBuilder.cmd(
 		newCmd(
 			func(ctx context.Context, name string, args ...string) Cmd {
 				if duration <= 0 {
@@ -128,7 +128,7 @@ func (c *cmdNoop) CombinedOutput() ([]byte, error) {
 // This code is ugly and needs refactoring.
 func (cb *cmdBuilder) soxExtendLength(inputFile string, extendedLength time.Duration) *fileCache {
 	if extendedLength <= 0 {
-		return cb.fileCacheBuilder.buildNoop(inputFile)
+		return cb.fileCacheBuilder.noop(inputFile)
 	}
 	ext := filepath.Ext(inputFile)
 	nameNoExt := strings.TrimSuffix(inputFile, ext)
@@ -146,7 +146,7 @@ func (cb *cmdBuilder) soxExtendLength(inputFile string, extendedLength time.Dura
 
 	filePaddedPath = filepath.Join(cb.tempDir, outFile)
 
-	return cb.fileCacheBuilder.buildCmd(
+	return cb.fileCacheBuilder.cmd(
 		&cmd{
 			execCmdCtx: func(ctx context.Context, name string, args ...string) Cmd {
 				arguments := []string{"--i", "-D", inputFilePath}
@@ -199,12 +199,16 @@ func (cb *cmdBuilder) soxExtendLength(inputFile string, extendedLength time.Dura
 	)
 }
 
+func (cb *cmdBuilder) copy(srcPath string, dstPath string) (fileOperation, node, error) {
+	return cb.fileCacheBuilder.copy(srcPath, dstPath)
+}
+
 func (cb *cmdBuilder) convert(wavFile string, name string) (fileOperation, node, error) {
 	switch cb.audioFormat {
 	case Wav:
-		return cb.fileCacheBuilder.buildCopyWav(wavFile, name)
+		return cb.fileCacheBuilder.copy(wavFile, name+".wav")
 	case M4a:
-		return cb.fileCacheBuilder.buildConvertCmd(
+		return cb.fileCacheBuilder.convert(
 			cb.execCmdCtx,
 			"afconvert",
 			[]string{
@@ -220,7 +224,7 @@ func (cb *cmdBuilder) convert(wavFile string, name string) (fileOperation, node,
 			},
 		)
 	case Mp3:
-		return cb.fileCacheBuilder.buildConvertCmd(
+		return cb.fileCacheBuilder.convert(
 			cb.execCmdCtx,
 			"ffmpeg",
 			[]string{

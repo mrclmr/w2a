@@ -106,29 +106,29 @@ func (n *noopNode) outputFile() string {
 	return n.outFile
 }
 
-type copyWav struct {
-	srcWavPath string
-	dstWavPath string
+type copyNode struct {
+	srcPath string
+	dstPath string
 }
 
-func (c *copyWav) Hash() string {
-	return hashShort(c.srcWavPath, c.dstWavPath)
+func (c *copyNode) Hash() string {
+	return hashShort(c.srcPath, c.dstPath)
 }
 
-func (c *copyWav) Name() string {
-	return strings.Join([]string{"copy", c.srcWavPath, c.dstWavPath}, " ")
+func (c *copyNode) Name() string {
+	return strings.Join([]string{"copy", c.srcPath, c.dstPath}, " ")
 }
 
-func (c *copyWav) Run(_ context.Context, _ []fileOperation) (fileOperation, error) {
-	err := copyFile(c.srcWavPath, c.dstWavPath)
+func (c *copyNode) Run(_ context.Context, _ []fileOperation) (fileOperation, error) {
+	err := copyFile(c.srcPath, c.dstPath)
 	if err != nil {
 		return 0, err
 	}
-	return created, nil
+	return copied, nil
 }
 
-func (c *copyWav) outputFile() string {
-	return c.dstWavPath
+func (c *copyNode) outputFile() string {
+	return filepath.Base(c.dstPath)
 }
 
 func hashShort(str string, data ...any) string {

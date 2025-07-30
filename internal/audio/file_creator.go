@@ -54,8 +54,9 @@ type FileCreator struct {
 	outputFilesToKeep map[string]bool
 	existingFilePaths map[string]map[string]bool
 
-	dag        *dag.Dag[fileOperation]
-	cmdBuilder *cmdBuilder
+	convertNodes map[string]node
+	dag          *dag.Dag[fileOperation]
+	cmdBuilder   *cmdBuilder
 }
 
 func NewFileCreator(
@@ -89,8 +90,9 @@ func NewFileCreator(
 		outputFilesToKeep: make(map[string]bool),
 		existingFilePaths: existingFilePaths,
 
-		dag:        dag.New[fileOperation](),
-		cmdBuilder: newCmdBuilder(existingFilePaths, execCmdCtx, tempDir, outputDir, tts, audioFormat),
+		convertNodes: make(map[string]node),
+		dag:          dag.New[fileOperation](),
+		cmdBuilder:   newCmdBuilder(existingFilePaths, execCmdCtx, tempDir, outputDir, tts, audioFormat),
 	}, nil
 }
 
@@ -122,6 +124,10 @@ func (f *FileCreator) BatchCreate(ctx context.Context, files []File) error {
 		if err != nil {
 			return err
 		}
+		convertCmd, err = f.checkCopyable(convertCmd)
+		if err != nil {
+			return err
+		}
 
 		path := filepath.Join(f.outputDir, convertCmd.outputFile())
 		f.outputFilesToKeep[path] = true
@@ -133,7 +139,7 @@ func (f *FileCreator) BatchCreate(ctx context.Context, files []File) error {
 		// TODO: Add correct duration.
 		playlist.Add(abs, 1*time.Second)
 
-		if op >= skipped {
+		if op >= exists {
 			slog.Info(op.String()+"\t", "path", path)
 		} else {
 			nodesToRun = append(nodesToRun, convertCmd)
@@ -159,6 +165,24 @@ func (f *FileCreator) BatchCreate(ctx context.Context, files []File) error {
 	return nil
 }
 
+func (f *FileCreator) checkCopyable(node node) (node, error) {
+	convNode, ok := f.convertNodes[node.Hash()]
+	if !ok {
+		f.convertNodes[node.Hash()] = node
+		return node, nil
+	}
+
+	_, cpNode, err := f.cmdBuilder.copy(filepath.Join(f.outputDir, convNode.outputFile()), filepath.Join(f.outputDir, node.outputFile()))
+	if err != nil {
+		return nil, err
+	}
+	err = f.dag.AddEdge(cpNode, convNode)
+	if err != nil {
+		return nil, err
+	}
+	return cpNode, nil
+}
+
 func (f *FileCreator) textToAudioFile(segments []Segment, name string) (fileOperation, node, error) {
 	concatCmd, err := f.toWavConcatenated(segments)
 	if err != nil {
@@ -168,7 +192,7 @@ func (f *FileCreator) textToAudioFile(segments []Segment, name string) (fileOper
 	if err != nil {
 		return 0, nil, err
 	}
-	if op >= skipped {
+	if op >= exists {
 		return op, convertCmd, nil
 	}
 	err = f.dag.AddEdge(convertCmd, concatCmd)
