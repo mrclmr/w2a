@@ -75,9 +75,9 @@ func (c *cmd) Name() string {
 
 func (c *cmd) Run(ctx context.Context, _ []fileOperation) (fileOperation, error) {
 	command := c.execCmdCtx(ctx, c.cmdStr, c.args...)
-	_, err := command.CombinedOutput()
+	out, err := command.CombinedOutput()
 	if err != nil {
-		return 0, err
+		return 0, cmdError(c.cmdStr, c.args, out)
 	}
 	return created, nil
 }
