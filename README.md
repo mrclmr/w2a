@@ -55,8 +55,3 @@ I made this program because simple audio files make it easier for me to follow t
 
 * Race Start (start-2929965.wav) by JustInvoke -- https://freesound.org/s/446142/ -- License: Attribution 4.0
 * success.wav (success-a1a69bc.wav) by maxmakessounds -- https://freesound.org/s/353546/ -- License: Attribution 4.0
-
-## Ideas
-
-- [ ] Generate .m3u8 playlist
-- [ ] Add rounds
