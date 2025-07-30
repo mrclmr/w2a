@@ -28,6 +28,25 @@ func (f *fileCacheBuilder) buildCmd(
 	}
 }
 
+func (f *fileCacheBuilder) buildSoxExtended(
+	execCmdCtx ExecCmdCtx,
+	cmdStr string,
+	args []string,
+	outFile string,
+	hash string,
+) *fileCache {
+	return &fileCache{
+		node: &cmd{
+			execCmdCtx: execCmdCtx,
+			cmdStr:     cmdStr,
+			args:       args,
+			outFile:    outFile,
+			hash:       hash,
+		},
+		existingFiles: f.existingFiles,
+	}
+}
+
 func (f *fileCacheBuilder) buildConvertCmd(
 	execCmdCtx ExecCmdCtx,
 	cmdStr string,

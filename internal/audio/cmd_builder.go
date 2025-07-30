@@ -117,6 +117,7 @@ func (c *cmdNoop) CombinedOutput() ([]byte, error) {
 
 // soxExtendLength needs a specific implementation.
 // If nothing is to do reading every file consumes time (~1s vs. instant).
+// This code is ugly and needs refactoring.
 func (cb *cmdBuilder) soxExtendLength(inputFile string, extendedLength time.Duration) *fileCache {
 	if extendedLength <= 0 {
 		return cb.fileCacheBuilder.buildNoop(inputFile)
@@ -126,18 +127,29 @@ func (cb *cmdBuilder) soxExtendLength(inputFile string, extendedLength time.Dura
 	filePadded := fmt.Sprintf("%s_extended-%s-<hash>%s", nameNoExt, extendedLength, ext)
 	filePaddedPath := filepath.Join(cb.tempDir, filePadded)
 	inputFilePath := filepath.Join(cb.tempDir, inputFile)
-	return cb.fileCacheBuilder.buildCmd(
+	cmdStr := "sox"
+	args := []string{
+		inputFilePath,
+		filePaddedPath,
+		// The calculated length argument is inserted as last.
+		"pad", "0",
+	}
+	args, outFile, hash := replaceHash(cmdStr, args)
+
+	filePaddedPath = filepath.Join(cb.tempDir, outFile)
+
+	return cb.fileCacheBuilder.buildSoxExtended(
 		func(ctx context.Context, name string, args ...string) Cmd {
 			arguments := []string{"--i", "-D", inputFilePath}
 
-			slog.Debug("execute", "cmd", strings.Join(append([]string{"sox"}, arguments...), " "))
+			slog.Debug("execute", "cmd", strings.Join(append([]string{cmdStr}, arguments...), " "))
 			out, err := cb.execCmdCtx(
 				ctx,
-				"sox",
+				cmdStr,
 				arguments...,
 			).CombinedOutput()
 			if err != nil {
-				return &cmdErr{err: cmdError("sox", arguments, out)}
+				return &cmdErr{err: cmdError(cmdStr, arguments, out)}
 			}
 
 			var float float64
@@ -162,7 +174,7 @@ func (cb *cmdBuilder) soxExtendLength(inputFile string, extendedLength time.Dura
 			}
 
 			args = append(args, fmt.Sprintf("%f", addLength.Seconds()))
-			slog.Debug("execute", "cmd", strings.Join(append([]string{"sox"}, args...), " "))
+			slog.Debug("execute", "cmd", strings.Join(append([]string{cmdStr}, args...), " "))
 
 			return cb.execCmdCtx(
 				ctx,
@@ -170,13 +182,10 @@ func (cb *cmdBuilder) soxExtendLength(inputFile string, extendedLength time.Dura
 				args...,
 			)
 		},
-		"sox",
-		[]string{
-			inputFilePath,
-			filePaddedPath,
-			// The calculated length argument is inserted as last.
-			"pad", "0",
-		},
+		cmdStr,
+		args,
+		outFile,
+		hash,
 	)
 }
 
