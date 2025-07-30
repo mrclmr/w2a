@@ -122,7 +122,6 @@ var (
 	filenameNormalizer = strings.NewReplacer(
 		" ", "_",
 		"<", "_",
-		",", "_",
 		">", "_",
 		":", "_",
 		"\"", "_",
