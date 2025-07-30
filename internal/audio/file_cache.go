@@ -119,6 +119,7 @@ func useExistingFile(existingFiles map[string]map[string]bool, n node) (fileOper
 			break
 		}
 		copiedPath := filepath.Join(filepath.Dir(path), n.outputFile())
+		// TODO: rename file?
 		err := copyFile(path, copiedPath)
 		if err != nil {
 			return 0, err
