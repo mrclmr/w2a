@@ -54,6 +54,10 @@ func argsBasePath(argsOrg []string) []string {
 	argsNew := make([]string, len(argsOrg))
 	copy(argsNew, argsOrg)
 	for i := range argsNew {
+		if strings.Contains(argsNew[i], "<hash>") {
+			argsNew[i] = filepath.Ext(argsNew[i])
+			continue
+		}
 		if strings.Contains(argsNew[i], string(filepath.Separator)) {
 			argsNew[i] = filepath.Base(argsNew[i])
 		}
