@@ -154,7 +154,7 @@ func (cb *cmdBuilder) soxExtendLength(inputFile string, extendedLength time.Dura
 			length := time.Duration(float * float64(time.Second))
 			addLength := extendedLength - length
 			if addLength <= 0 {
-				err := copyFile(inputFilePath, filePaddedPath)
+				err = copyFile(inputFilePath, filePaddedPath)
 				if err != nil {
 					return &cmdErr{err: err}
 				}

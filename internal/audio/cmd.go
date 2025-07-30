@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -25,31 +26,30 @@ func newCmd(
 	cmdStr string,
 	args []string,
 ) *cmd {
-	c := &cmd{
+	argsReplaced, outFile, hash := replaceHash(cmdStr, args)
+	return &cmd{
 		execCmdCtx: execCmdCtx,
 		cmdStr:     cmdStr,
-		args:       args,
-	}
-	c.createOutputFilename()
-	return c
-}
-
-func (c *cmd) createOutputFilename() {
-	hash := hashShort(c.cmdStr, argsBasePath(c.args))
-
-	// Replace <hash> with actual hash and
-	// store the new filename and hash for access.
-	for i, arg := range c.args {
-		if strings.Contains(arg, "<hash>") {
-			outputFilePath := strings.ReplaceAll(arg, "<hash>", hash)
-			c.args[i] = outputFilePath
-			c.outFile = filepath.Base(outputFilePath)
-			c.hash = hash
-			break
-		}
+		args:       argsReplaced,
+		outFile:    outFile,
+		hash:       hash,
 	}
 }
 
+// replaceHash replaces <hash> with actual hash.
+func replaceHash(cmdStr string, argsOrig []string) (args []string, outFile string, hash string) {
+	h := hashShort(cmdStr, argsBasePath(argsOrig))
+
+	idx := slices.IndexFunc(argsOrig, func(arg string) bool { return strings.Contains(arg, "<hash>") })
+
+	filePathReplaced := strings.ReplaceAll(argsOrig[idx], "<hash>", h)
+	argsOrig[idx] = filePathReplaced
+
+	return argsOrig, filepath.Base(filePathReplaced), h
+}
+
+// argsBasePath removes paths from file so hashing
+// is consistent independently of directory names.
 func argsBasePath(argsOrg []string) []string {
 	argsNew := make([]string, len(argsOrg))
 	copy(argsNew, argsOrg)
