@@ -115,6 +115,8 @@ func (f *FileCreator) BatchCreate(ctx context.Context, files []File) error {
 	nodesToRun := make([]dag.Node[fileOperation], 0)
 	paths := make([]string, 0)
 
+	// TODO: Copy files if the conversion is the same.
+
 	for _, file := range files {
 		op, convertCmd, err := f.textToAudioFile(file.Segments, file.Name)
 		if err != nil {
