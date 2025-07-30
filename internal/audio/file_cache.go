@@ -32,7 +32,7 @@ func (f *fileCacheBuilder) convert(
 	args []string,
 ) (fileOperation, node, error) {
 	n := newCmd(execCmdCtx, cmdStr, args)
-	op, err := useExistingFile(f.existingFiles, n)
+	op, err := useExistingFile(f.existingFiles, n.outputFile())
 	if err != nil {
 		return 0, nil, err
 	}
@@ -58,7 +58,7 @@ func (f *fileCacheBuilder) copy(
 		srcPath: srcPath,
 		dstPath: dstPath,
 	}
-	op, err := useExistingFile(f.existingFiles, cpNode)
+	op, err := useExistingFile(f.existingFiles, cpNode.outputFile())
 	if err != nil {
 		return 0, nil, err
 	}
@@ -91,7 +91,7 @@ func (f *fileCache) Name() string {
 }
 
 func (f *fileCache) Run(ctx context.Context, _ []fileOperation) (fileOperation, error) {
-	op, err := useExistingFile(f.existingFiles, f.node)
+	op, err := useExistingFile(f.existingFiles, f.node.outputFile())
 	if err != nil {
 		return 0, err
 	}
@@ -101,16 +101,16 @@ func (f *fileCache) Run(ctx context.Context, _ []fileOperation) (fileOperation, 
 	return f.node.Run(ctx, nil)
 }
 
-func useExistingFile(existingFiles map[string]map[string]bool, n node) (fileOperation, error) {
+func useExistingFile(existingFiles map[string]map[string]bool, filename string) (fileOperation, error) {
 	for _, paths := range existingFiles {
 		for p := range paths {
-			if norm.NFC.String(filepath.Base(p)) == n.outputFile() {
+			if norm.NFC.String(filepath.Base(p)) == filename {
 				return exists, nil
 			}
 		}
 	}
 
-	hash := extractHash(n.outputFile())
+	hash := extractHash(filename)
 	paths, ok := existingFiles[hash]
 	if ok {
 		var path string
@@ -118,7 +118,7 @@ func useExistingFile(existingFiles map[string]map[string]bool, n node) (fileOper
 			path = p
 			break
 		}
-		copiedPath := filepath.Join(filepath.Dir(path), n.outputFile())
+		copiedPath := filepath.Join(filepath.Dir(path), filename)
 		// TODO: rename file?
 		err := copyFile(path, copiedPath)
 		if err != nil {
