@@ -18,31 +18,10 @@ type fileCacheBuilder struct {
 }
 
 func (f *fileCacheBuilder) buildCmd(
-	execCmdCtx ExecCmdCtx,
-	cmdStr string,
-	args []string,
+	cmd *cmd,
 ) *fileCache {
 	return &fileCache{
-		node:          newCmd(execCmdCtx, cmdStr, args),
-		existingFiles: f.existingFiles,
-	}
-}
-
-func (f *fileCacheBuilder) buildSoxExtended(
-	execCmdCtx ExecCmdCtx,
-	cmdStr string,
-	args []string,
-	outFile string,
-	hash string,
-) *fileCache {
-	return &fileCache{
-		node: &cmd{
-			execCmdCtx: execCmdCtx,
-			cmdStr:     cmdStr,
-			args:       args,
-			outFile:    outFile,
-			hash:       hash,
-		},
+		node:          cmd,
 		existingFiles: f.existingFiles,
 	}
 }

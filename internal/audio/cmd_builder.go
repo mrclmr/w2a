@@ -42,27 +42,31 @@ func (cb *cmdBuilder) ttsCmd(text string) *fileCache {
 	switch cb.tts.TTSCmd {
 	case Say:
 		return cb.fileCacheBuilder.buildCmd(
-			cb.execCmdCtx,
-			"say",
-			[]string{
-				// `--data-format=LEF32@22050` is needed for wav.
-				// https://stackoverflow.com/questions/9729153/error-on-say-when-output-format-is-wave
-				// The comments state that a sample rate higher than 22050 is not recommended.
-				"--data-format", "LEF32@22050",
-				"--voice", cb.tts.Voice,
-				"--output-file", filepath.Join(cb.tempDir, "say-<hash>.wav"),
-				text,
-			},
+			newCmd(
+				cb.execCmdCtx,
+				"say",
+				[]string{
+					// `--data-format=LEF32@22050` is needed for wav.
+					// https://stackoverflow.com/questions/9729153/error-on-say-when-output-format-is-wave
+					// The comments state that a sample rate higher than 22050 is not recommended.
+					"--data-format", "LEF32@22050",
+					"--voice", cb.tts.Voice,
+					"--output-file", filepath.Join(cb.tempDir, "say-<hash>.wav"),
+					text,
+				},
+			),
 		)
 	case EspeakNG:
 		return cb.fileCacheBuilder.buildCmd(
-			cb.execCmdCtx,
-			"espeak-ng",
-			[]string{
-				"-v", cb.tts.Voice,
-				"-out", filepath.Join(cb.tempDir, "espeak-ng-<hash>.wav"),
-				text,
-			},
+			newCmd(
+				cb.execCmdCtx,
+				"espeak-ng",
+				[]string{
+					"-v", cb.tts.Voice,
+					"-out", filepath.Join(cb.tempDir, "espeak-ng-<hash>.wav"),
+					text,
+				},
+			),
 		)
 	default:
 	}
@@ -82,30 +86,34 @@ func (cb *cmdBuilder) soxConcat(filenames []string) *fileCache {
 		filenames[i] = filepath.Join(cb.tempDir, filenames[i])
 	}
 	return cb.fileCacheBuilder.buildCmd(
-		cb.execCmdCtx,
-		"sox",
-		append(filenames, filepath.Join(cb.tempDir, "concat-<hash>.wav")),
+		newCmd(
+			cb.execCmdCtx,
+			"sox",
+			append(filenames, filepath.Join(cb.tempDir, "concat-<hash>.wav")),
+		),
 	)
 }
 
 func (cb *cmdBuilder) soxSilence(duration time.Duration) *fileCache {
 	return cb.fileCacheBuilder.buildCmd(
-		func(ctx context.Context, name string, args ...string) Cmd {
-			if duration <= 0 {
-				return &cmdErr{errors.New("negative or zero duration for silence")}
-			}
-			return cb.execCmdCtx(ctx, name, args...)
-		},
-		"sox",
-		[]string{
-			"-n",
-			"-r",
-			"22050",
-			filepath.Join(cb.tempDir, fmt.Sprintf("silence_%s-<hash>.wav", duration)),
-			"trim",
-			"0.0",
-			fmt.Sprintf("%.2f", duration.Seconds()),
-		},
+		newCmd(
+			func(ctx context.Context, name string, args ...string) Cmd {
+				if duration <= 0 {
+					return &cmdErr{errors.New("negative or zero duration for silence")}
+				}
+				return cb.execCmdCtx(ctx, name, args...)
+			},
+			"sox",
+			[]string{
+				"-n",
+				"-r",
+				"22050",
+				filepath.Join(cb.tempDir, fmt.Sprintf("silence_%s-<hash>.wav", duration)),
+				"trim",
+				"0.0",
+				fmt.Sprintf("%.2f", duration.Seconds()),
+			},
+		),
 	)
 }
 
@@ -138,54 +146,56 @@ func (cb *cmdBuilder) soxExtendLength(inputFile string, extendedLength time.Dura
 
 	filePaddedPath = filepath.Join(cb.tempDir, outFile)
 
-	return cb.fileCacheBuilder.buildSoxExtended(
-		func(ctx context.Context, name string, args ...string) Cmd {
-			arguments := []string{"--i", "-D", inputFilePath}
+	return cb.fileCacheBuilder.buildCmd(
+		&cmd{
+			execCmdCtx: func(ctx context.Context, name string, args ...string) Cmd {
+				arguments := []string{"--i", "-D", inputFilePath}
 
-			slog.Debug("execute", "cmd", strings.Join(append([]string{cmdStr}, arguments...), " "))
-			out, err := cb.execCmdCtx(
-				ctx,
-				cmdStr,
-				arguments...,
-			).CombinedOutput()
-			if err != nil {
-				return &cmdErr{err: cmdError(cmdStr, arguments, out)}
-			}
-
-			var float float64
-			for l := range strings.Lines(string(out)) {
-				float, err = strconv.ParseFloat(strings.TrimSuffix(l, "\n"), 64)
-				if err == nil {
-					break
-				}
-			}
-			if err != nil {
-				return &cmdErr{err: fmt.Errorf("%w: no parsable float in\n%s", err, string(out))}
-			}
-
-			length := time.Duration(float * float64(time.Second))
-			addLength := extendedLength - length
-			if addLength <= 0 {
-				err = copyFile(inputFilePath, filePaddedPath)
+				slog.Debug("execute", "cmd", strings.Join(append([]string{cmdStr}, arguments...), " "))
+				out, err := cb.execCmdCtx(
+					ctx,
+					cmdStr,
+					arguments...,
+				).CombinedOutput()
 				if err != nil {
-					return &cmdErr{err: err}
+					return &cmdErr{err: cmdError(cmdStr, arguments, out)}
 				}
-				return &cmdNoop{}
-			}
 
-			args = append(args, fmt.Sprintf("%f", addLength.Seconds()))
-			slog.Debug("execute", "cmd", strings.Join(append([]string{cmdStr}, args...), " "))
+				var float float64
+				for l := range strings.Lines(string(out)) {
+					float, err = strconv.ParseFloat(strings.TrimSuffix(l, "\n"), 64)
+					if err == nil {
+						break
+					}
+				}
+				if err != nil {
+					return &cmdErr{err: fmt.Errorf("%w: no parsable float in\n%s", err, string(out))}
+				}
 
-			return cb.execCmdCtx(
-				ctx,
-				name,
-				args...,
-			)
+				length := time.Duration(float * float64(time.Second))
+				addLength := extendedLength - length
+				if addLength <= 0 {
+					err = copyFile(inputFilePath, filePaddedPath)
+					if err != nil {
+						return &cmdErr{err: err}
+					}
+					return &cmdNoop{}
+				}
+
+				args = append(args, fmt.Sprintf("%f", addLength.Seconds()))
+				slog.Debug("execute", "cmd", strings.Join(append([]string{cmdStr}, args...), " "))
+
+				return cb.execCmdCtx(
+					ctx,
+					name,
+					args...,
+				)
+			},
+			cmdStr:  cmdStr,
+			args:    args,
+			outFile: outFile,
+			hash:    hash,
 		},
-		cmdStr,
-		args,
-		outFile,
-		hash,
 	)
 }
 
