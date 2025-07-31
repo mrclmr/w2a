@@ -22,12 +22,12 @@ import (
 	"github.com/spf13/cobra/doc"
 )
 
-func Execute(version string) {
+func ExecuteContext(ctx context.Context, version string) error {
 	rootCmd, err := newRootCmd(version)
-	checkErr(err)
-
-	err = rootCmd.Execute()
-	checkErr(err)
+	if err != nil {
+		return err
+	}
+	return rootCmd.ExecuteContext(ctx)
 }
 
 func newRootCmd(
@@ -96,13 +96,6 @@ Sound Credits
 	rootCmd.AddCommand(newManCmd(rootCmd))
 
 	return rootCmd, nil
-}
-
-func checkErr(err error) {
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
 }
 
 func autoComplete(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
