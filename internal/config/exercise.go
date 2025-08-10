@@ -7,10 +7,11 @@ import (
 )
 
 type Exercise struct {
-	Name     string        `yaml:"name"`
-	Duration time.Duration `yaml:"duration"`
-	Texts    []string      `yaml:"texts"`
-	HalfTime bool          `yaml:"half_time"`
+	Name                  string        `yaml:"name"`
+	Duration              time.Duration `yaml:"duration"`
+	Texts                 []string      `yaml:"texts"`
+	HalfTime              bool          `yaml:"half_time"`
+	PauseDurationOverride time.Duration `yaml:"pause_duration"`
 }
 
 type exercise Exercise
@@ -35,5 +36,6 @@ func (e *Exercise) UnmarshalYAML(node *yaml.Node) error {
 	e.Duration = y.Duration
 	e.Texts = y.Texts
 	e.HalfTime = y.HalfTime
+	e.PauseDurationOverride = y.PauseDurationOverride
 	return nil
 }

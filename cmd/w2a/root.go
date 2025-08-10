@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -172,10 +173,12 @@ func run(ctx context.Context, cfg *config.Workout) error {
 		)
 	}
 
-	pauseDurRemainder := cfg.Pause.Duration - (exerciseStartSoundDur + countdownDur)
-
 	for i, e := range cfg.Exercises {
+
 		// Pause
+		pauseDuration := cmp.Or(e.PauseDurationOverride, cfg.Pause.Duration)
+		pauseDurRemainder := pauseDuration - (exerciseStartSoundDur + countdownDur)
+
 		tmplValues.ExerciseDuration = i18n.DurToText(e.Duration)
 		tmplValues.ExerciseName = e.Name
 
@@ -191,7 +194,6 @@ func run(ctx context.Context, cfg *config.Workout) error {
 		})
 
 		// Exercise
-
 		startAndName := []audio.Segment{
 			&audio.Sound{Filename: "start-2929965.wav", Length: exerciseStartSoundDur},
 			&audio.Text{Value: cfg.ExerciseBeginning.Replace(tmplValues), Length: exerciseNameDur},
