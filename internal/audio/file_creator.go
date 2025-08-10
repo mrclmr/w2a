@@ -117,14 +117,12 @@ func (f *FileCreator) BatchCreate(ctx context.Context, files []File) error {
 	nodesToRun := make([]dag.Node[fileOperation], 0)
 	paths := make([]string, 0)
 
-	// TODO: Copy files if the conversion is the same.
-
 	for _, file := range files {
 		op, convertCmd, err := f.textToAudioFile(file.Segments, file.Name)
 		if err != nil {
 			return err
 		}
-		convertCmd, err = f.checkCopyable(convertCmd)
+		convertCmd, err = f.addCopyNodeIfConvertExists(convertCmd)
 		if err != nil {
 			return err
 		}
@@ -165,14 +163,15 @@ func (f *FileCreator) BatchCreate(ctx context.Context, files []File) error {
 	return nil
 }
 
-func (f *FileCreator) checkCopyable(node node) (node, error) {
-	convNode, ok := f.convertNodes[node.Hash()]
+// addCopyNodeIfConvertExists adds a copy node if the convert node already exists.
+func (f *FileCreator) addCopyNodeIfConvertExists(convertNode node) (node, error) {
+	convNode, ok := f.convertNodes[convertNode.Hash()]
 	if !ok {
-		f.convertNodes[node.Hash()] = node
-		return node, nil
+		f.convertNodes[convertNode.Hash()] = convertNode
+		return convertNode, nil
 	}
 
-	_, cpNode, err := f.cmdBuilder.copy(filepath.Join(f.outputDir, convNode.outputFile()), filepath.Join(f.outputDir, node.outputFile()))
+	_, cpNode, err := f.cmdBuilder.copy(filepath.Join(f.outputDir, convNode.outputFile()), filepath.Join(f.outputDir, convertNode.outputFile()))
 	if err != nil {
 		return nil, err
 	}
