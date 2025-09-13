@@ -88,7 +88,7 @@ func (cb *cmdBuilder) soxConcat(filenames []string) *fileCache {
 	return cb.fileCacheBuilder.cmd(
 		newCmd(
 			cb.execCmdCtx,
-			"sox",
+			"sox_ng",
 			append(filenames, filepath.Join(cb.tempDir, "concat-<hash>.wav")),
 		),
 	)
@@ -103,7 +103,7 @@ func (cb *cmdBuilder) soxSilence(duration time.Duration) *fileCache {
 				}
 				return cb.execCmdCtx(ctx, name, args...)
 			},
-			"sox",
+			"sox_ng",
 			[]string{
 				"-n",
 				"-r",
@@ -135,7 +135,7 @@ func (cb *cmdBuilder) soxExtendLength(inputFile string, extendedLength time.Dura
 	filePadded := fmt.Sprintf("%s_extended-%s-<hash>%s", nameNoExt, extendedLength, ext)
 	filePaddedPath := filepath.Join(cb.tempDir, filePadded)
 	inputFilePath := filepath.Join(cb.tempDir, inputFile)
-	cmdStr := "sox"
+	cmdStr := "sox_ng"
 	args := []string{
 		inputFilePath,
 		filePaddedPath,

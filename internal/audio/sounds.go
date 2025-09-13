@@ -8,8 +8,8 @@ import (
 
 // Allow standalone executable (go build) by embedding and calling initSounds().
 //
-// Use one channel:        sox old.wav -c 1 new.wav
-// Use 22050 sample rate:  sox old.wav -r 22050 new.wav
+// Use one channel:        sox_ng old.wav -c 1 new.wav
+// Use 22050 sample rate:  sox_ng old.wav -r 22050 new.wav
 //
 // A Sha256 hash is needed in the file name. Best is to use Sha256 of the file content.
 //

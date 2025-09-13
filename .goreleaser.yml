@@ -65,7 +65,7 @@ homebrew_casks:
     description: "Convert a workout yaml file to audio files."
     homepage: "https://github.com/mrclmr/w2a"
     dependencies:
-      - formula: sox
+      - formula: sox_ng
     manpages:
       - 'man-pages/w2a.1'
     completions:
@@ -82,7 +82,7 @@ scoops:
     repository:
       owner: mrclmr
       name: scoop-bucket
-    depends: ["sox", "espeak-ng", "ffmpeg"]
+    depends: ["sox_ng", "espeak-ng", "ffmpeg"]
     homepage: "https://github.com/mrclmr/w2a"
     description: "Convert a workout yaml file to audio files."
     license: MIT

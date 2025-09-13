@@ -14,7 +14,7 @@ scoop install w2a
 ## Manual
 
 `w2a` needs these programs:
-* [`sox`](https://sourceforge.net/projects/sox/)
+* [`sox_ng`](https://codeberg.org/sox_ng/sox_ng)
 * [`espeak-ng`](https://github.com/espeak-ng/espeak-ng) (or on macOS pre-installed `say`)
 * [`ffmpeg`](https://ffmpeg.org) (or on macOS pre-installed `afconvert`)
 

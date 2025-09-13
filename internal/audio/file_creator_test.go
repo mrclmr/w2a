@@ -55,10 +55,10 @@ func TestFileCreator_BatchCreate(t *testing.T) {
 				},
 			},
 			wantPlaylist: `#EXTM3U
-#EXTINF:1,my-file-cf27744.mp3
-file://` + filepath.Join(dir, "output-dir", "my-file-cf27744.mp3") + "\n",
-			wantLog: `sox -n -r 22050 ` + filepath.Join(dir, "temp-dir", "silence_1s-568ce3a.wav") + ` trim 0.0 1.00
-ffmpeg -i ` + filepath.Join(dir, "temp-dir", "silence_1s-568ce3a.wav") + ` -ab 256k -ar 44100 -ac 2 ` + filepath.Join(dir, "output-dir", "my-file-cf27744.mp3") + "\n",
+#EXTINF:1,my-file-f4a826f.mp3
+file://` + filepath.Join(dir, "output-dir", "my-file-f4a826f.mp3") + "\n",
+			wantLog: `sox_ng -n -r 22050 ` + filepath.Join(dir, "temp-dir", "silence_1s-c8c9dd8.wav") + ` trim 0.0 1.00
+ffmpeg -i ` + filepath.Join(dir, "temp-dir", "silence_1s-c8c9dd8.wav") + ` -ab 256k -ar 44100 -ac 2 ` + filepath.Join(dir, "output-dir", "my-file-f4a826f.mp3") + "\n",
 		},
 	}
 	for _, tt := range tests {
