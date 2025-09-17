@@ -7,7 +7,7 @@ import (
 
 	"github.com/mrclmr/w2a/internal/audio"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 type TTSCmd struct {
