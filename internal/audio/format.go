@@ -23,7 +23,7 @@ func (a *Format) UnmarshalYAML(node *yaml.Node) error {
 	if err != nil {
 		return err
 	}
-	for i := M4a; i < Unknown; i++ {
+	for i := range Unknown {
 		if strings.EqualFold(i.String(), y) {
 			*a = i
 			return nil
